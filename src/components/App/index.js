@@ -1,20 +1,18 @@
 import React, { Component } from "react";
-import axios from 'axios';
-import Search from "./searchComponent/Search";
-import Table from "./tableComponent/Table";
-import "./App.css";
-import Button from "./buttonComponent/Button";
-
-const DEFAULT_QUERY = "redux";
-const DEFAULT_HPP = "100";
-
-const PATH_BASE = "https://hn.algolia.com/api/v1";
-const PATH_SEARCH = "/search";
-const PARAM_SEARCH = "query=";
-const PARAM_PAGE = "page=";
-const PARAM_HPP = "hitsPerPage=";
-
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
+import axios from "axios";
+import Search from "../Search";
+import Table from "../Table";
+import "./index.css";
+import Button, { SubmitButton, SaveButton, CancelButton } from "../Buttons";
+import {
+  DEFAULT_QUERY,
+  DEFAULT_HPP,
+  PATH_BASE,
+  PATH_SEARCH,
+  PARAM_SEARCH,
+  PARAM_PAGE,
+  PARAM_HPP,
+} from "../../constants";
 
 class App extends Component {
   constructor(props) {
@@ -22,7 +20,7 @@ class App extends Component {
 
     this.state = {
       results: null,
-      searchKey: '',
+      searchKey: "",
       searchTerm: DEFAULT_QUERY,
       error: null,
     };
@@ -43,8 +41,8 @@ class App extends Component {
     axios(
       `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`
     )
-      .then(result => this.setSearchTopStories(result.data))
-      .catch(error => this.setState({ error }));
+      .then((result) => this.setSearchTopStories(result.data))
+      .catch((error) => this.setState({ error }));
   }
 
   onSearchSubmit(event) {
@@ -62,7 +60,8 @@ class App extends Component {
     const { hits, page } = result;
     const { searchKey, results } = this.state;
 
-    const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
+    const oldHits =
+      results && results[searchKey] ? results[searchKey].hits : [];
     const updatedHits = [...oldHits, ...hits];
     this.setState({
       results: { ...results, [searchKey]: { hits: updatedHits, page } },
@@ -81,7 +80,7 @@ class App extends Component {
 
     const isNotId = (item) => item.objectID !== id;
     const updatedHits = hits.filter(isNotId);
-    
+
     this.setState({
       results: { ...results, [searchKey]: { hits: updatedHits, page } },
     });
@@ -92,10 +91,11 @@ class App extends Component {
   }
 
   render() {
-    
     const { searchTerm, results, searchKey, error } = this.state;
-    const page = (results && results[searchKey] && results[searchKey].page) || 0;
-    const list = (results && results[searchKey] && results[searchKey].hits) || [];
+    const page =
+      (results && results[searchKey] && results[searchKey].page) || 0;
+    const list =
+      (results && results[searchKey] && results[searchKey].hits) || [];
 
     return (
       <div className="page">
@@ -108,7 +108,13 @@ class App extends Component {
             Search
           </Search>
         </div>
-        { error ? <div className="interactions"><p>Something went wrong.</p></div> : <Table list={list} onDismiss={this.onDismiss} /> }
+        {error ? (
+          <div className="interactions">
+            <p>Something went wrong.</p>
+          </div>
+        ) : (
+          <Table list={list} onDismiss={this.onDismiss} />
+        )}
         <div className="interactions">
           <Button
             onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}
@@ -122,3 +128,5 @@ class App extends Component {
 }
 
 export default App;
+
+export { Button, Search, Table };
