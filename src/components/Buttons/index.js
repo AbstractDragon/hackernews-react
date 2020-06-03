@@ -4,7 +4,6 @@ import CancelButton from './CancelButton';
 import React from 'react';
 import PropTypes from "prop-types";
 
-
 const Button = ({onClick, className, children}) => {
     return (
         <button onClick={onClick} children={children} className={className} type="button">
