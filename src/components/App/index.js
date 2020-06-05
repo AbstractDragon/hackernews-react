@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
+import { sortBy } from "lodash";
+import classNames from "classnames";
 import Search from "../Search";
 import Table from "../Table";
 import "./index.css";
@@ -14,6 +16,14 @@ import {
   PARAM_HPP,
 } from "../../constants";
 
+const SORTS = {
+  NONE: (list) => list,
+  TITLE: (list) => sortBy(list, "title"),
+  AUTHOR: (list) => sortBy(list, "author"),
+  COMMENTS: (list) => sortBy(list, "num_comments").reverse(),
+  POINTS: (list) => sortBy(list, "points").reverse(),
+};
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -24,6 +34,8 @@ class App extends Component {
       searchTerm: DEFAULT_QUERY,
       error: null,
       isLoading: false,
+      sortKey: "NONE",
+      isSortReverse: false,
     };
 
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
@@ -32,6 +44,13 @@ class App extends Component {
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
+    this.onSort = this.onSort.bind(this);
+  }
+
+  onSort(sortKey) {
+    const isSortReverse =
+      this.state.sortKey === sortKey && !this.state.isSortReverse;
+    this.setState({ sortKey, isSortReverse });
   }
 
   needsToSearchTopStories(searchTerm) {
@@ -95,7 +114,15 @@ class App extends Component {
   }
 
   render() {
-    const { searchTerm, results, searchKey, error, isLoading } = this.state;
+    const {
+      searchTerm,
+      results,
+      searchKey,
+      error,
+      isLoading,
+      sortKey,
+      isSortReverse,
+    } = this.state;
     const page =
       (results && results[searchKey] && results[searchKey].page) || 0;
     const list =
@@ -117,18 +144,21 @@ class App extends Component {
             <p>Something went wrong.</p>
           </div>
         ) : (
-          <Table list={list} onDismiss={this.onDismiss} />
+          <Table
+            isSortReverse={isSortReverse}
+            list={list}
+            onSort={this.onSort}
+            sortKey={sortKey}
+            onDismiss={this.onDismiss}
+          />
         )}
         <div className="interactions">
-          {isLoading ? (
-            <Loading />
-          ) : 
-            <Button
-              onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}
-            >
-              More
-            </Button>
-          }
+          <ButtonWithLoading
+            isLoading={isLoading}
+            onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}
+          >
+            More
+          </ButtonWithLoading>
         </div>
       </div>
     );
@@ -137,6 +167,25 @@ class App extends Component {
 
 const Loading = () => <div>Loading ...</div>;
 
+const withLoading = (Component) => ({ isLoading, ...rest }) =>
+  isLoading ? <Loading /> : <Component {...rest} />;
+
+const ButtonWithLoading = withLoading(Button);
+
+const Sort = ({ sortKey, activeSortKey, onSort, children }) => {
+  const sortClass = classNames("button-inline", {
+    "button-active": sortKey === activeSortKey,
+  });
+  return (
+    <Button
+      onClick={() => onSort(sortKey)}
+      className={sortClass}
+    >
+      {children}
+    </Button>
+  );
+};
+
 export default App;
 
-export { Button, Search, Table };
+export { Button, Search, Table, Sort, SORTS };
